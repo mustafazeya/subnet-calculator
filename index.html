@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Subnet Calculator | Network Tools</title>
+    <meta name="description" content="Free IP subnet calculator with network splitting capabilities. Calculate CIDR blocks, split networks into subnets, and get detailed network information.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const themeFromUrl = urlParams.get('theme');
+            const savedTheme = themeFromUrl || localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (themeFromUrl) localStorage.setItem('theme', themeFromUrl);
+        })();
+    </script>
+</head>
+<body>
+    <div class="theme-toggle">
+        <button id="themeToggle" aria-label="Toggle theme">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <a href="/" class="home-link" title="Back to Homepage">
+        <i class="fas fa-home"></i>
+    </a>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-network-wired"></i> IP Subnet Calculator</h1>
+            <p class="tagline">Calculate network details from CIDR notation and split networks into smaller subnets</p>
+        </header>
+
+        <main>
+            <section class="cards-grid">
+                <div class="card">
+                    <h2 class="section-title">
+                        <i class="fas fa-keyboard"></i>
+                        Input
+                    </h2>
+                    
+                    <div class="input-group">
+                        <label class="input-label" for="cidr-input">CIDR Block</label>
+                        <input 
+                            type="text" 
+                            id="cidr-input" 
+                            class="input-field" 
+                            placeholder="192.168.1.0/24"
+                            autocomplete="off"
+                        >
+                        <div class="input-hint">
+                            Enter an IP address with subnet mask in CIDR notation (e.g., 192.168.1.0/24)
+                        </div>
+                    </div>
+
+                    <div class="examples">
+                        <strong>Examples:</strong><br>
+                        <span class="example-btn" onclick="setExample('192.168.1.0/24')">192.168.1.0/24</span>
+                        <span class="example-btn" onclick="setExample('10.0.0.0/16')">10.0.0.0/16</span>
+                        <span class="example-btn" onclick="setExample('172.16.0.0/20')">172.16.0.0/20</span>
+                        <span class="example-btn" onclick="setExample('192.168.0.0/22')">192.168.0.0/22</span>
+                        <span class="example-btn" onclick="setExample('10.1.0.0/18')">10.1.0.0/18</span>
+                    </div>
+
+                    <div class="error-message" id="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="error-text"></span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Results
+                    </h2>
+                    
+                    <div class="result-grid" id="results">
+                        <div class="result-item">
+                            <div class="result-label">Network Address</div>
+                            <div class="result-value" id="network-address">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('network-address', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-label">Subnet Mask</div>
+                            <div class="result-value" id="subnet-mask">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('subnet-mask', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-label">First Usable IP</div>
+                            <div class="result-value" id="first-ip">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('first-ip', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-label">Last Usable IP</div>
+                            <div class="result-value" id="last-ip">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('last-ip', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-label">Broadcast Address</div>
+                            <div class="result-value" id="broadcast-address">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('broadcast-address', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-label">Total Hosts</div>
+                            <div class="result-value" id="total-hosts">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('total-hosts', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-label">Usable Hosts</div>
+                            <div class="result-value" id="usable-hosts">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('usable-hosts', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div class="result-item">
+                            <div class="result-label">Wildcard Mask</div>
+                            <div class="result-value" id="wildcard-mask">-</div>
+                            <button class="copy-btn" onclick="copyToClipboard('wildcard-mask', this)">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="subnet-info" id="subnet-info" style="display: none;">
+                        <h4><i class="fas fa-info-circle"></i> Subnet Information</h4>
+                        <div id="subnet-class">-</div>
+                        <div id="subnet-type">-</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="splitter-section" id="subnet-splitter" style="display: none;">
+                <h2 class="section-title">
+                    <i class="fas fa-cut"></i>
+                    Subnet Splitter
+                </h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                    Split the network into smaller subnets. Choose by number of subnets, hosts per subnet, or target subnet mask.
+                </p>
+                
+                <div class="splitter-controls">
+                    <div class="input-group">
+                        <label class="input-label" for="split-type">Split Method</label>
+                        <select id="split-type" class="input-field" style="cursor: pointer;">
+                            <option value="subnets">Number of Subnets</option>
+                            <option value="hosts">Hosts per Subnet</option>
+                            <option value="mask">Target Subnet Mask</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label" for="split-value">Value</label>
+                        <input 
+                            type="number" 
+                            id="split-value" 
+                            class="input-field" 
+                            min="2" 
+                            max="1024"
+                            placeholder="e.g., 4"
+                        >
+                    </div>
+                    
+                    <button id="split-button" class="split-button" onclick="splitSubnet()">
+                        <i class="fas fa-cut"></i> Split
+                    </button>
+                </div>
+
+                <div id="split-results" style="display: none;">
+                    <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                        <i class="fas fa-network-wired"></i>
+                        Generated Subnets (<span id="subnet-count">0</span>)
+                    </h3>
+                    <div class="subnets-grid" id="subnets-grid"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>All calculations performed locally in your browser</p>
+            <div class="footer-links">
+                <a href="https://github.com/mustafazeya/subnet-calculator" target="_blank">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
